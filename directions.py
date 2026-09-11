@@ -36,8 +36,8 @@ DECISION_LOG_BIN = str(Path.home() / "Library/Python/3.9/bin/decision-log")
 
 
 def now_ts() -> str:
-    """Current timestamp in decision log format."""
-    return datetime.now().strftime("%Y-%m-%d %H:%M")
+    """Current timestamp in decision log format (with seconds)."""
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def load_directions() -> dict[str, Any]:
@@ -110,7 +110,8 @@ def cmd_add(args: argparse.Namespace) -> int:
             return 1
 
     # If first direction, make it active
-    status = "active" if not data["directions"] else "pending"
+    has_active = any(d["status"] == "active" for d in data["directions"])
+    status = "pending" if has_active else "active"
 
     direction = {
         "id": args.direction_id,
