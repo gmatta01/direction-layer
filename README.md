@@ -99,6 +99,25 @@ LAST DECISION: 2026-09-18 10:05
 - `directions.json` - Your directions and their status
 - `decisions.txt` - Decision log (append-only)
 
+## Pi Extension (Auto-Inject Status)
+
+The `pi-extension/` directory contains a Pi extension that automatically injects direction status after every tool call.
+
+### Install
+
+```bash
+cp pi-extension/direction-layer.ts ~/.pi/agent/extensions/
+```
+
+### What It Does
+
+After every tool call, you'll see:
+```
+[direction-layer] → Optimize hot loop (3 decisions) | Last: 2026-09-11 10:30:00 | 1/3 done, 1 pending
+```
+
+The agent sees this automatically - no manual `--status` checks needed.
+
 ## License
 
 MIT
