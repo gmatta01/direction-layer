@@ -45,6 +45,19 @@ function formatStatus(state: DirectionState): string {
 export default function (pi: ExtensionAPI) {
   let state: DirectionState | null = null;
 
+  // Restore state from session on load
+  pi.on("session_start", async (_event, ctx) => {
+    for (const entry of ctx.sessionManager.getEntries()) {
+      if (entry.type === "custom" && entry.customType === "direction-layer") {
+        try {
+          state = entry.data as DirectionState;
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    }
+  });
+
   // Slash command: /direction
   pi.registerCommand("direction", {
     description: "Initialize or manage direction layer for this session",
@@ -92,7 +105,7 @@ export default function (pi: ExtensionAPI) {
         }));
 
         // Confirm
-        const summary = `GOAL: ${goal}\n\nDIRECTIONS:\n${directions.map((d, i) => 
+        const summary = `GOAL: ${goal}\n\nDIRECTIONS:\n${directions.map((d) => 
           `${d.status === "active" ? "→" : "⏳"} ${d.name}`
         ).join("\n")}`;
 
@@ -114,11 +127,7 @@ export default function (pi: ExtensionAPI) {
         };
 
         // Persist to session
-        pi.appendEntry({
-          customType: "direction-layer",
-          content: JSON.stringify(state),
-          display: false
-        });
+        pi.appendEntry("direction-layer", state);
 
         ctx.ui.notify(`Direction layer initialized: ${goal}`, "success");
         return;
@@ -160,11 +169,7 @@ export default function (pi: ExtensionAPI) {
         }
 
         // Persist
-        pi.appendEntry({
-          customType: "direction-layer",
-          content: JSON.stringify(state),
-          display: false
-        });
+        pi.appendEntry("direction-layer", state);
         return;
       }
 
@@ -192,11 +197,7 @@ export default function (pi: ExtensionAPI) {
             result: result || ""
           });
 
-          pi.appendEntry({
-            customType: "direction-layer",
-            content: JSON.stringify(state),
-            display: false
-          });
+          pi.appendEntry("direction-layer", state);
 
           ctx.ui.notify(`Logged: ${action}`, "success");
         }
@@ -237,19 +238,5 @@ export default function (pi: ExtensionAPI) {
     ];
 
     return { content: newContent };
-  });
-
-  // Restore state from session on load
-  pi.on("session_start", async (event, ctx) => {
-    // Check for existing direction-layer entries
-    const entries = ctx.sessionManager.getEntries?.("direction-layer") || [];
-    if (entries.length > 0) {
-      const last = entries[entries.length - 1];
-      try {
-        state = JSON.parse(last.content);
-      } catch {
-        // Ignore parse errors
-      }
-    }
   });
 }
